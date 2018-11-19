@@ -43,6 +43,11 @@
     <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reader.cs" />
+    <Compile Include="Structure\ClassInfo.cs" />
+    <Compile Include="Structure\TreeBuilder.cs" />
+    <Compile Include="Structure\TreeStructure.cs" />
+    <Compile Include="Structure\MethodInfo.cs" />
+    <Compile Include="Structure\TestClassStructure.cs" />
     <Compile Include="Writer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
