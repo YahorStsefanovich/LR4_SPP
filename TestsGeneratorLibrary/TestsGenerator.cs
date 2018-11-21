@@ -17,7 +17,7 @@ namespace TestsGeneratorLibrary
                this.config = config;
           }
 
-          public Task Generate(Reader reader, Writer writer, List<string> source)
+          public async Task Generate(Reader reader, Writer writer, List<string> source)
           {
                DataflowLinkOptions linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 
@@ -31,24 +31,23 @@ namespace TestsGeneratorLibrary
                };
 
                TransformBlock<string, string> readingBlock =
-                    new TransformBlock<string, string>(new Func<string, Task<string> >(reader.ReadAsync), processingTaskRestriction);
+                    new TransformBlock<string, string>(fileName => reader.ReadAsync(fileName), processingTaskRestriction);
                TransformBlock<string, TestClassStructure> producingBlock =
-                new TransformBlock<string, TestClassStructure>(new Func<string, TestClassStructure>(Produce), processingTaskRestriction);
-
-               ActionBlock<TestClassStructure> writingBlock = new ActionBlock<TestClassStructure>(
-                    ((generatedClass)=>writer.WriteAsync(generatedClass).Wait()), outputTaskRestriction);
+                    new TransformBlock<string, TestClassStructure>(sourceCode => Produce(sourceCode), processingTaskRestriction);
+               ActionBlock<TestClassStructure> writingBlock = 
+                    new ActionBlock<TestClassStructure>(generatedClass => writer.WriteAsync(generatedClass), outputTaskRestriction);
 
                readingBlock.LinkTo(producingBlock, linkOptions);
                producingBlock.LinkTo(writingBlock, linkOptions);
 
                foreach (string path in source)
                {
-                    readingBlock.SendAsync(path);
+                    await readingBlock.SendAsync(path);
                }
 
                readingBlock.Complete();
 
-               return writingBlock.Completion;
+               await writingBlock.Completion;
           }
 
           private TestClassStructure Produce(string sourceCode)
