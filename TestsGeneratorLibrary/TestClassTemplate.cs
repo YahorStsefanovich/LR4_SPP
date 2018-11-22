@@ -44,7 +44,7 @@ namespace TestsGeneratorLibrary
                      );
 
 
-                    string fileName = String.Format("{0}Tets.cs", classInfo.ClassName);
+                    string fileName = String.Format("{0}Test.cs", classInfo.ClassName);
                     string fileData = compilationUnit.NormalizeWhitespace().ToFullString();
 
                     testTemplates.Add(new TestClassStructure(fileName, fileData));
@@ -55,8 +55,9 @@ namespace TestsGeneratorLibrary
 
           private NamespaceDeclarationSyntax GetNamespaceDeclaration(ClassInfo classInfo)
           {
-               NamespaceDeclarationSyntax namespaceDeclaration = NamespaceDeclaration(QualifiedName(
-                   IdentifierName(classInfo.NamespaceName), IdentifierName("Tests")));
+               NamespaceDeclarationSyntax namespaceDeclaration = 
+                    NamespaceDeclaration(QualifiedName(
+                         IdentifierName(classInfo.NamespaceName), IdentifierName("Tests")));
 
                return namespaceDeclaration;
           }
@@ -105,7 +106,7 @@ namespace TestsGeneratorLibrary
                        Argument(
                            LiteralExpression(
                                SyntaxKind.StringLiteralExpression,
-                               Literal("Genrated")))));
+                               Literal("Generated")))));
 
                return args;
           }
@@ -125,9 +126,6 @@ namespace TestsGeneratorLibrary
                List<UsingDirectiveSyntax> usingDirectives = new List<UsingDirectiveSyntax>();
 
                usingDirectives.Add(UsingDirective(IdentifierName("System")));
-               usingDirectives.Add(UsingDirective(IdentifierName("System.Collections.Generic")));
-               usingDirectives.Add(UsingDirective(IdentifierName("System.Linq")));
-               usingDirectives.Add(UsingDirective(IdentifierName("System.Text")));
                usingDirectives.Add(UsingDirective(IdentifierName("Microsoft.VisualStudio.TestTools.UnitTesting")));
                usingDirectives.Add(UsingDirective(IdentifierName(classInfo.NamespaceName)));
 
