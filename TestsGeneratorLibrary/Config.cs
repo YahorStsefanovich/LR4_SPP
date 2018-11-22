@@ -8,33 +8,27 @@
 
           public int ReadingTasksCount
           {
-               get
-               {
-                    return readingTasksCount;
-               }
+               get { return readingTasksCount; }
+               set { readingTasksCount = value; }
           }
 
           public int ProcessingTasksCount
           {
-               get
-               {
-                    return processingTasksCount;
-               }
+               get { return processingTasksCount; }
+               set { processingTasksCount = value; }
           }
 
           public int WritingTasksCount
           {
-               get
-               {
-                    return writingTasksCount;
-               }
+               get { return writingTasksCount; }
+               set { writingTasksCount = value; }
           }
 
           public Config(int readingTasksCount, int processingTasksCount, int writingTasksCount)
           {
-               this.ReadingTasksCount = readingTasksCount;
-               this.ProcessingTasksCount = processingTasksCount;
-               this.WritingTasksCount = writingTasksCount;
+               this.readingTasksCount = readingTasksCount;
+               this.processingTasksCount = processingTasksCount;
+               this.writingTasksCount = writingTasksCount;
           }
      }
 }
