@@ -2,13 +2,39 @@
 {
      public class Config
      {
-          public int MaxProcessingTasksCount { get; }
-          public int MaxWritingTasksCount { get; }
+          private int readingTasksCount;
+          private int processingTasksCount;
+          private int writingTasksCount;
 
-          public Config(int processingTasksCount, int writingTasksCount)
+          public int ReadingTasksCount
           {
-               MaxProcessingTasksCount = processingTasksCount;
-               MaxWritingTasksCount = writingTasksCount;
+               get
+               {
+                    return readingTasksCount;
+               }
+          }
+
+          public int ProcessingTasksCount
+          {
+               get
+               {
+                    return processingTasksCount;
+               }
+          }
+
+          public int WritingTasksCount
+          {
+               get
+               {
+                    return writingTasksCount;
+               }
+          }
+
+          public Config(int readingTasksCount, int processingTasksCount, int writingTasksCount)
+          {
+               this.ReadingTasksCount = readingTasksCount;
+               this.ProcessingTasksCount = processingTasksCount;
+               this.WritingTasksCount = writingTasksCount;
           }
      }
 }

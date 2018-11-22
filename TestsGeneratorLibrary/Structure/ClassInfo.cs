@@ -6,9 +6,9 @@ namespace TestsGeneratorLibrary.Structure
      {
           public string NamespaceName { get; }
           public string ClassName { get; }
-          public IEnumerable<MethodInfo> Methods { get; }
+          public List<MethodInfo> Methods { get; }
 
-          public ClassInfo(string namespaceName, string className, IEnumerable<MethodInfo> methods)
+          public ClassInfo(string namespaceName, string className, List<MethodInfo> methods)
           {
                NamespaceName = namespaceName;
                ClassName = className;

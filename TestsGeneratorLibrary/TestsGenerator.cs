@@ -19,23 +19,34 @@ namespace TestsGeneratorLibrary
 
           public async Task Generate(Reader reader, Writer writer, List<string> source)
           {
+               //для уведомления о завершении считывания
                DataflowLinkOptions linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 
-               ExecutionDataflowBlockOptions processingTaskRestriction = new ExecutionDataflowBlockOptions {
-                    MaxDegreeOfParallelism = config.MaxProcessingTasksCount
+               //количество одновременно считываемых файлов
+               ExecutionDataflowBlockOptions maxReading = new ExecutionDataflowBlockOptions
+               {
+                    MaxDegreeOfParallelism = config.ReadingTasksCount
                };
 
-               ExecutionDataflowBlockOptions outputTaskRestriction = new ExecutionDataflowBlockOptions
+               //количество одновременно обрабатываемых файлов
+               ExecutionDataflowBlockOptions maxProcessing = new ExecutionDataflowBlockOptions {
+                    MaxDegreeOfParallelism = config.ProcessingTasksCount
+               };
+
+               //количество одновременно записываемых файлов
+               ExecutionDataflowBlockOptions maxWriting = new ExecutionDataflowBlockOptions
                {
-                    MaxDegreeOfParallelism = config.MaxWritingTasksCount
+                    MaxDegreeOfParallelism = config.WritingTasksCount
                };
 
                TransformBlock<string, string> readingBlock =
-                    new TransformBlock<string, string>(fileName => reader.ReadAsync(fileName), processingTaskRestriction);
+                    new TransformBlock<string, string>(fileName => reader.ReadAsync(fileName), maxReading);
+
                TransformBlock<string, TestClassStructure> producingBlock =
-                    new TransformBlock<string, TestClassStructure>(sourceCode => Produce(sourceCode), processingTaskRestriction);
+                    new TransformBlock<string, TestClassStructure>(sourceCode => Produce(sourceCode), maxProcessing);
+
                ActionBlock<TestClassStructure> writingBlock = 
-                    new ActionBlock<TestClassStructure>(generatedClass => writer.WriteAsync(generatedClass), outputTaskRestriction);
+                    new ActionBlock<TestClassStructure>(generatedClass => writer.WriteAsync(generatedClass), maxWriting);
 
                readingBlock.LinkTo(producingBlock, linkOptions);
                producingBlock.LinkTo(writingBlock, linkOptions);
@@ -45,6 +56,7 @@ namespace TestsGeneratorLibrary
                     await readingBlock.SendAsync(path);
                }
 
+               //сообщение о завершении считываемых файлов
                readingBlock.Complete();
 
                await writingBlock.Completion;

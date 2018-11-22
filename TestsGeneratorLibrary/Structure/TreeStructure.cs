@@ -4,11 +4,12 @@ namespace TestsGeneratorLibrary.Structure
 {
      public class TreeStructure
      {
-          public IEnumerable<ClassInfo> Classes { get; }
+          private List<ClassInfo> classes;
+          public List<ClassInfo> Classes { get; }
 
-          public TreeStructure(IEnumerable<ClassInfo> classes)
+          public TreeStructure(List<ClassInfo> classes)
           {
-               Classes = classes;
+               this.Classes = classes;
           }
      }
 }

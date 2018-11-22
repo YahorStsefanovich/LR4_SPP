@@ -9,7 +9,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace TestsGeneratorLibrary
 {
      internal class TestClassTemplate
-    {
+     {
           private readonly TreeStructure treeStructure;
 
           public TestClassTemplate(TreeStructure treeStructure)
@@ -17,24 +17,34 @@ namespace TestsGeneratorLibrary
                this.treeStructure = treeStructure;
           }
 
-          public IEnumerable<TestClassStructure> GetTestTemplates()
+          public List<TestClassStructure> GetTestTemplates()
           {
                List<TestClassStructure> testTemplates = new List<TestClassStructure>();
 
                foreach (ClassInfo classInfo in treeStructure.Classes)
                {
-                    NamespaceDeclarationSyntax namespaceDeclaration = NamespaceDeclaration(QualifiedName(
-                         IdentifierName(classInfo.NamespaceName), IdentifierName("Tests")));
+                    CompilationUnitSyntax compilationUnit = CompilationUnit()
+                         //используемые директивы
+                         .WithUsings(GetUsingDirectives(classInfo))
+                         //namespace
+                         .WithMembers(SingletonList<MemberDeclarationSyntax>(GetNamespaceDeclaration(classInfo)
+                         //имена тестовых классов
+                         .WithMembers(SingletonList<MemberDeclarationSyntax>(ClassDeclaration(classInfo.ClassName + "Tests")
+                              .WithAttributeLists(
+                                   SingletonList<AttributeListSyntax>(
+                                   AttributeList(
+                                        SingletonSeparatedList<AttributeSyntax>(
+                                             Attribute(
+                                                  IdentifierName("TestClass"))))))
+                              //модификаторы доступа
+                              .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                              //публичные методы
+                              .WithMembers(GetMembersDeclarations(classInfo))))
+                        )
+                     );
 
-                    CompilationUnitSyntax compilationUnit = CompilationUnit().
-                         WithUsings(GetUsingDirectives(classInfo)).
-                         WithMembers(SingletonList<MemberDeclarationSyntax>(namespaceDeclaration.
-                              WithMembers(SingletonList<MemberDeclarationSyntax>(ClassDeclaration(classInfo.ClassName + "Tests").
-                                   WithAttributeLists(SingletonList(AttributeList(SingletonSeparatedList(Attribute(IdentifierName("TestClass")))))).
-                              WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword))).
-                              WithMembers(GetClassMembers(classInfo))))));
 
-                    string fileName = String.Format("{0}Tetst.cs", classInfo.ClassName);
+                    string fileName = String.Format("{0}Tets.cs", classInfo.ClassName);
                     string fileData = compilationUnit.NormalizeWhitespace().ToFullString();
 
                     testTemplates.Add(new TestClassStructure(fileName, fileData));
@@ -43,100 +53,85 @@ namespace TestsGeneratorLibrary
                return testTemplates;
           }
 
-          private SyntaxList<MemberDeclarationSyntax> GetClassMembers(ClassInfo classInfo)
+          private NamespaceDeclarationSyntax GetNamespaceDeclaration(ClassInfo classInfo)
           {
-               List<MemberDeclarationSyntax> classMembers = new List<MemberDeclarationSyntax>();
+               NamespaceDeclarationSyntax namespaceDeclaration = NamespaceDeclaration(QualifiedName(
+                   IdentifierName(classInfo.NamespaceName), IdentifierName("Tests")));
 
-               foreach (MethodInfo methodInfo in classInfo.Methods)
+               return namespaceDeclaration;
+          }
+
+          private SyntaxList<MemberDeclarationSyntax> GetMembersDeclarations(ClassInfo classInfo)
+          {
+               List<MemberDeclarationSyntax> methods = new List<MemberDeclarationSyntax>();
+
+               foreach (MethodInfo method in classInfo.Methods)
                {
-                    classMembers.Add(GetTestMethodDeclaration(methodInfo));
+                    methods.Add(GetMethodDeclaration(method));
                }
-
-               return List(classMembers);
+               return new SyntaxList<MemberDeclarationSyntax>(methods);
           }
 
-          private MemberDeclarationSyntax GetTestMethodDeclaration(MethodInfo methodInfo)
+          private MemberDeclarationSyntax GetMethodDeclaration(MethodInfo method)
           {
-               List<StatementSyntax> blockMembers = new List<StatementSyntax>();
-               List<ArgumentSyntax> parameters = new List<ArgumentSyntax>();
+               List<StatementSyntax> bodyMembers = new List<StatementSyntax>();
 
-               ArgumentListSyntax args = ArgumentList(SingletonSeparatedList(
-                    Argument(
-                         LiteralExpression(
-                              SyntaxKind.StringLiteralExpression,
-                              Literal("autogenerated")))));
+               bodyMembers.Add(
+                    ExpressionStatement(
+                         InvocationExpression(
+                              GetAssertFail())
+                                   .WithArgumentList(GetMemberArgs())));
 
-               blockMembers.Add(ExpressionStatement(
-                    InvocationExpression(GetMemberAccessExpression("Assert", "Fail")).WithArgumentList(args)));
-
-               return GetMethodDeclaration("TestMethod", String.Format("{0}Test", methodInfo.Name), List(blockMembers));
-          }
-
-          private MemberAccessExpressionSyntax GetMemberAccessExpression(string objectName, string memberName)
-          {
-               return MemberAccessExpression(
-                         SyntaxKind.SimpleMemberAccessExpression,
-                         IdentifierName(objectName),
-                         IdentifierName(memberName)
-                    );
-          }
-
-          private MemberDeclarationSyntax GetMethodDeclaration(string attributeName, string methodName, SyntaxList<StatementSyntax> blockMembers)
-          {
-               MethodDeclarationSyntax methodDeclaration =
-                    MethodDeclaration(
-                         PredefinedType(
-                              Token(SyntaxKind.VoidKeyword)),
-                              Identifier(methodName)
-                         ).WithAttributeLists(
-                              SingletonList(
-                                   AttributeList(
-                                        SingletonSeparatedList(
-                                             Attribute(
-                                                  IdentifierName(attributeName)))))).
-                           WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword))).
-                           WithBody(Block(blockMembers));
+               MethodDeclarationSyntax methodDeclaration = MethodDeclaration(
+                    PredefinedType(
+                         Token(SyntaxKind.VoidKeyword)),
+                              Identifier(method.Name + "Test"))
+                                   .WithAttributeLists(
+                                        SingletonList<AttributeListSyntax>(
+                              AttributeList(
+                                   SingletonSeparatedList<AttributeSyntax>(
+                                        Attribute(
+                                             IdentifierName("TestMethod"))))))
+                              .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                              .WithBody(Block(bodyMembers));
 
                return methodDeclaration;
           }
 
-          private SyntaxList<UsingDirectiveSyntax> GetUsingDirectives(ClassInfo classInfo)
+          private ArgumentListSyntax GetMemberArgs()
           {
-               List<UsingDirectiveSyntax> usingDirectives = new List<UsingDirectiveSyntax>()
-               {
-                    UsingDirective(IdentifierName("System")),
-                    UsingDirective(
-                         QualifiedName(
-                              QualifiedName(
-                                   IdentifierName("System"),
-                                   IdentifierName("Collections")
-                              ),
-                         IdentifierName("Generic"))
-                    ),
-                    UsingDirective(
-                         QualifiedName(
-                              IdentifierName("System"),
-                              IdentifierName("Linq")
-                         )
-                    ),
-                    UsingDirective(
-                         QualifiedName(
-                              QualifiedName(
-                                   QualifiedName(
-                                        IdentifierName("Microsoft"),
-                                        IdentifierName("VisualStudio")
-                                   ),
-                                   IdentifierName("TestTools")
-                              ),
-                              IdentifierName("UnitTesting")
-                         )
-                    ),
-                    UsingDirective(IdentifierName(classInfo.NamespaceName))
-               };
+               ArgumentListSyntax args = ArgumentList(
+                   SingletonSeparatedList(
+                       Argument(
+                           LiteralExpression(
+                               SyntaxKind.StringLiteralExpression,
+                               Literal("Genrated")))));
 
-               return List(usingDirectives);
+               return args;
           }
 
+          private MemberAccessExpressionSyntax GetAssertFail()
+          {
+               MemberAccessExpressionSyntax assertFail = MemberAccessExpression(
+                   SyntaxKind.SimpleMemberAccessExpression,
+                   IdentifierName("Assert"),
+                   IdentifierName("Fail"));
 
+               return assertFail;
+          }
+
+          private SyntaxList<UsingDirectiveSyntax> GetUsingDirectives(ClassInfo classInfo)
+          {
+               List<UsingDirectiveSyntax> usingDirectives = new List<UsingDirectiveSyntax>();
+
+               usingDirectives.Add(UsingDirective(IdentifierName("System")));
+               usingDirectives.Add(UsingDirective(IdentifierName("System.Collections.Generic")));
+               usingDirectives.Add(UsingDirective(IdentifierName("System.Linq")));
+               usingDirectives.Add(UsingDirective(IdentifierName("System.Text")));
+               usingDirectives.Add(UsingDirective(IdentifierName("Microsoft.VisualStudio.TestTools.UnitTesting")));
+               usingDirectives.Add(UsingDirective(IdentifierName(classInfo.NamespaceName)));
+
+               return new SyntaxList<UsingDirectiveSyntax>(usingDirectives);
+          }
      }
 }

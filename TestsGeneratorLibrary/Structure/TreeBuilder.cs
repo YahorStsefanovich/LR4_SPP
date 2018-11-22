@@ -18,41 +18,34 @@ namespace TestsGeneratorLibrary.Structure
           public TreeStructure GetTreeStructure()
           {
                SyntaxTree programSyntaxTree = CSharpSyntaxTree.ParseText(fileText);
+               //корень синтаксического дерева
                CompilationUnitSyntax root = programSyntaxTree.GetCompilationUnitRoot();
-
-               var classDeclarations = from classDeclaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>()
-                                       select classDeclaration;
-
-               return new TreeStructure(GetClasses(classDeclarations));
+               return new TreeStructure(GetClasses(root));
           }
 
-          private IEnumerable<ClassInfo> GetClasses(IEnumerable<ClassDeclarationSyntax> classDeclarations)
+          private List<ClassInfo> GetClasses(CompilationUnitSyntax root)
           {
                List<ClassInfo> classes = new List<ClassInfo>();
 
-               foreach (ClassDeclarationSyntax classDeclaration in classDeclarations)
+               foreach (ClassDeclarationSyntax classDeclaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
                {
-                    var publicMethods = from methodDeclaration in classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>()
-                                        where methodDeclaration.Modifiers.Any(x => x.ValueText == "public") == true
-                                        select methodDeclaration;
-
-                    var namespaceDeclaration = (NamespaceDeclarationSyntax)classDeclaration.Parent;
-
-                    string namespaceName = namespaceDeclaration.Name.ToString();
+                    string namespaceName = ((NamespaceDeclarationSyntax)classDeclaration.Parent).Name.ToString();
                     string className = classDeclaration.Identifier.ValueText;
-                    IEnumerable<MethodInfo> methods = GetMethods(publicMethods);
-
-                    classes.Add(new ClassInfo(namespaceName, className, methods));
+                    classes.Add(new ClassInfo(namespaceName, className, GetMethods(classDeclaration)));
                }
 
                return classes;
           }
 
-          private IEnumerable<MethodInfo> GetMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations)
+          private List<MethodInfo> GetMethods(ClassDeclarationSyntax classDeclaration)
           {
                List<MethodInfo> methods = new List<MethodInfo>();
 
-               foreach (MethodDeclarationSyntax methodDeclaration in methodDeclarations)
+               foreach (MethodDeclarationSyntax methodDeclaration in 
+                    classDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>()
+                .Where((methodDeclaration) => 
+                methodDeclaration.Modifiers.Any((modifier) => 
+                modifier.IsKind(SyntaxKind.PublicKeyword))))
                {
                     string methodName = methodDeclaration.Identifier.ValueText;
                     methods.Add(new MethodInfo(methodName));
