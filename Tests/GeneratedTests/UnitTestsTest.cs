@@ -7,6 +7,11 @@ namespace Tests.Tests
     [TestClass]
     public class UnitTestsTests
     {
+        [TestInitialize]
+        public void Initialize()
+        {
+        }
+
         [TestMethod]
         public void InitializeTest()
         {

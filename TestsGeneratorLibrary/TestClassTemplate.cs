@@ -66,33 +66,32 @@ namespace TestsGeneratorLibrary
           {
                List<MemberDeclarationSyntax> methods = new List<MemberDeclarationSyntax>();
 
+               methods.Add(GetMethodDeclaration("Initialize", "TestInitialize", new List<StatementSyntax>()));
                foreach (MethodInfo method in classInfo.Methods)
                {
-                    methods.Add(GetMethodDeclaration(method));
-               }
-               return new SyntaxList<MemberDeclarationSyntax>(methods);
-          }
-
-          private MemberDeclarationSyntax GetMethodDeclaration(MethodInfo method)
-          {
-               List<StatementSyntax> bodyMembers = new List<StatementSyntax>();
-
-               bodyMembers.Add(
+                    List<StatementSyntax> bodyMembers = new List<StatementSyntax>();
+                    bodyMembers.Add(
                     ExpressionStatement(
                          InvocationExpression(
                               GetAssertFail())
                                    .WithArgumentList(GetMemberArgs())));
+                    methods.Add(GetMethodDeclaration(method.Name + "Test", "TestMethod", bodyMembers));
+               }
+               return new SyntaxList<MemberDeclarationSyntax>(methods);
+          }       
 
+          private MemberDeclarationSyntax GetMethodDeclaration(String methodName, String atribute, List<StatementSyntax> bodyMembers )
+          {              
                MethodDeclarationSyntax methodDeclaration = MethodDeclaration(
                     PredefinedType(
                          Token(SyntaxKind.VoidKeyword)),
-                              Identifier(method.Name + "Test"))
+                              Identifier(methodName))
                                    .WithAttributeLists(
                                         SingletonList<AttributeListSyntax>(
                               AttributeList(
                                    SingletonSeparatedList<AttributeSyntax>(
                                         Attribute(
-                                             IdentifierName("TestMethod"))))))
+                                             IdentifierName(atribute))))))
                               .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                               .WithBody(Block(bodyMembers));
 

@@ -71,17 +71,16 @@ namespace Tests
                IEnumerable<MethodDeclarationSyntax> methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
 
                Assert.IsTrue(methods.Count() > 1);
-               Assert.AreEqual("InitializeTest", methods.ElementAt<MethodDeclarationSyntax>(0).Identifier.ToString());
+               Assert.AreEqual("InitializeTest", methods.ElementAt<MethodDeclarationSyntax>(1).Identifier.ToString());
           }
 
           [TestMethod]
           public void TestMethodAttributes()
           {
                IEnumerable<MethodDeclarationSyntax> methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
-
-               foreach (MethodDeclarationSyntax method in methods)
+               for (int i = 1; i < methods.Count(); i++)
                {
-                    Assert.AreEqual("TestMethod", method.AttributeLists[0].Attributes[0].Name.ToString());
+                    Assert.AreEqual("TestMethod", methods.ElementAt(i).AttributeLists[0].Attributes[0].Name.ToString());
                }
                
           }
@@ -90,7 +89,7 @@ namespace Tests
           public void AssertFailTest()
           {
                IEnumerable<MethodDeclarationSyntax> methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
-               int actual = methods.ElementAt<MethodDeclarationSyntax>(0).Body.Statements.OfType<ExpressionStatementSyntax>().Where((statement) => statement.ToString().Contains("Assert.Fail")).Count();
+               int actual = methods.ElementAt<MethodDeclarationSyntax>(1).Body.Statements.OfType<ExpressionStatementSyntax>().Where((statement) => statement.ToString().Contains("Assert.Fail")).Count();
                Assert.AreEqual(1, actual);
           }
      }
