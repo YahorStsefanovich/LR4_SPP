@@ -44,7 +44,7 @@ namespace TestsGeneratorLibrary
                      );
 
 
-                    string fileName = String.Format("{0}Test.cs", classInfo.ClassName);
+                    string fileName = String.Format("{0}Test.cs.test", classInfo.ClassName);
                     string fileData = compilationUnit.NormalizeWhitespace().ToFullString();
 
                     testTemplates.Add(new TestClassStructure(fileName, fileData));

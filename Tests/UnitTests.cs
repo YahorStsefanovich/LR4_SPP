@@ -27,7 +27,7 @@ namespace Tests
                TestsGenerator generator = new TestsGenerator(new Config(3, 3, 3));
                generator.Generate(new Reader(), new Writer(outputPath), pathes).Wait();
 
-               string sourceCode = File.ReadAllText(outputPath + @"\UnitTestsTest.cs");
+               string sourceCode = File.ReadAllText(outputPath + @"\UnitTestsTest.cs.test");
                root = CSharpSyntaxTree.ParseText(sourceCode).GetCompilationUnitRoot();
           }
 
@@ -79,6 +79,7 @@ namespace Tests
           public void TestMethodAttributes()
           {
                IEnumerable<MethodDeclarationSyntax> methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
+               Assert.AreEqual("TestInitialize", methods.ElementAt(0).AttributeLists[0].Attributes[0].Name.ToString());
                for (int i = 1; i < methods.Count(); i++)
                {
                     Assert.AreEqual("TestMethod", methods.ElementAt(i).AttributeLists[0].Attributes[0].Name.ToString());
