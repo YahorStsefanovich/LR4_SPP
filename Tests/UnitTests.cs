@@ -18,10 +18,11 @@ namespace Tests
           [TestInitialize]
           public void Initialize()
           {
-               string outputPath = @"D:\LR\sem5(NOW)\SPP\LR4_SPP\LR4_SPP\Tests\GeneratedTests";
+               string pathToTests = Path.GetFullPath(@"..\Tests");
+               string outputPath = pathToTests + @"\GeneratedTests";
 
                List<string> pathes = new List<string>();
-               pathes.Add(Path.Combine(@"D:\LR\sem5(NOW)\SPP\LR4_SPP\LR4_SPP\Tests\UnitTests.cs"));
+               pathes.Add(pathToTests + @"\UnitTests.cs");
 
                TestsGenerator generator = new TestsGenerator(new Config(3, 3, 3));
                generator.Generate(new Reader(), new Writer(outputPath), pathes).Wait();
